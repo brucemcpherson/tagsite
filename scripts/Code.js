@@ -23,11 +23,11 @@ function timedBlog() {
 function getDefaultE() {
    return {parameters:{ tagdomain: 'mcpher.com',
                         tagsite: 'share', 
-                        tagoutput :'drive',
+                        tagoutput :'gcs',
                         tagfile: 'play.json',
                            d3: "d3,d3js,d3.js",
                            vbaExcel: "vba,vb,excel,xl",
-                           gas: "gas,apps\\sscript,scriptdb",
+                           gas: "gas,apps\\sscript,scriptdb,gcs",
                            javascript: "js,javascript",
                            parse: "parse,parse.com",
                            jquery: "jquery",
@@ -57,12 +57,13 @@ function initBlogger(e,source) {
 
 function getApiKey(api) {
   // my private store
-  var myKey = mcpher.getMyStuff(api, myStuff.myStuffDb());
+  var myKey = myStuff.getMyStuff(api, myStuff.myStuffDb());
+  Logger.log(myKey);
   if (myKey.status.code == "good") {
-    return myKey.result.myStuff;
+    return myKey.result;
   }
   else {
-    mcpher.MsgBox("unable to find your key for " + api);
+    throw ("unable to find your key for " + api);
     return null;
   }
 }
@@ -144,6 +145,10 @@ function doGet(e) {
     results = writeToGdrive ( eArgs.parameters.tagfile || "tag" + eArgs.source +".json" , JSON.stringify(results));
     
   }
+  if ( eArgs.parameters.tagoutput == "gcs" && ! results.error ) { 
+    results = writeToGcs( eArgs.parameters.tagfile || "tag" + eArgs.source +".json" , results);
+    
+  }
   // this is either file data or json results
   return ContentService.createTextOutput ( eArgs.parameters.callback ? 
                         eArgs.parameters.callback + "(" + JSON.stringify(results) + ");" : JSON.stringify(results)) 
@@ -161,6 +166,54 @@ function getTextFromNode(x) {
     case 'XmlElement': return x.getNodes().map(getTextFromNode).join('');
     default: return '';
   }
+}
+
+function writeToGcs (name , data ) {
+  
+  // first get auth
+    // set up gcs 
+  var bucket = 'xliberation.com';
+  var packageName = 'xliberation-store';
+  var result;
+  
+  // this consumes up the Oauth2 authentication that was set up once off
+  var goa = cGoa.make (packageName,PropertiesService.getScriptProperties());
+  
+  // you can get the project id & accessToken from goa
+  var accessToken = goa.getToken();
+  
+  // create a new store manager - we'll be writing to xliberation.com/dump
+  var handle = new cGcsStore.GcsStore()
+  .setAccessToken (accessToken)
+  .setBucket(bucket)
+  .setFolderKey("dump");
+  
+  
+  var result = { 
+    data: [] , 
+    file : { 
+      url: 'thepublicurl' , 
+      name: name , 
+      id: 'some id', 
+      download: 'the download url',
+      hosted: "the download url"
+    } 
+  };
+  
+  // write the data
+  try {
+    handle
+    .put (name , data)
+    .patchPredefinedAcl (name , "publicRead");
+    // all of these are the same for gcs.
+    result.url = result.id = result.download = result.hosted = handle.getSelfLink(name);
+  }
+  catch(err) {
+    Logger.log(err);
+  }
+
+  return result || { error : 'complete gdrive screw up', file: { name:name}};
+  
 }
 // write it to google drive
 function writeToGdrive( name , json ) {
