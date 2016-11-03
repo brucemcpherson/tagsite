@@ -25,23 +25,30 @@ function getDefaultE() {
                         tagsite: 'share', 
                         tagoutput :'gcs',
                         tagfile: 'play.json',
-                           d3: "d3,d3js,d3.js",
-                           vbaExcel: "vba,vb,excel,xl",
-                           gas: "gas,apps\\sscript,scriptdb,gcs",
-                           javascript: "js,javascript",
-                           parse: "parse,parse.com",
-                           jquery: "jquery",
-                           maps: "maps",
-                           fusion: "fusion",
-                           earth: "earth",
-                           vizualization: "viz,vi[sz]uali[sz]ations?",
-                           snippets: "snippets?,oneliners?,one\\sliners?",
-                           colors: "colors?,heatmaps?",
-                           charts: "charts?",
+                          d3: "d3",
+                           vba: "vba,vb,visual basic",
+                           excel: "excel,xl,workbook",
+                           gas: "gas,apps script,scriptdb,spreadsheetapp,documentapp,formapp",
+                           authentication:"digest,oauth2?,auth,credential,password",
+                           database:"dbase,database,sql,parse,datastore,fusion,orchestrate,drive,dbabstraction,scratch,driver",
+                           async:"async,promise,deferred,asynchronous",
+                           library:"library,project,share",
+                           drive:"drive",
+                           javascript: "js,javascript,jquery",
+                           parse: "parse",
+                           geo: "maps,earth,geocode",
+                           vizualization: "vi[sz]\\w?",
+                           snippets: "tip,snippet,one\s?liner",
+                           colors: "color,heatmap",
+                           charts: "chart",
                            json: "json",
-                           classes: "class,classes",
-                           cdataset: "cdataset,data\\sabstraction,data\\smanipulation\\sclasses",
-                           cjobject: "cjobject"
+                           classes: "class",
+                           cdataset: "cdataset,data abstraction,data manipulation",
+                           cjobject: "cjobject",
+                           gadget: "gadget",
+                           html: "html",
+                           addons: "add-?ons,sidebar,dialog",
+                           apis:"api,gcs,bigquery,books,sheets,plus,people,maps,execution api,gplus"
                        }};
 }
 
@@ -283,8 +290,8 @@ function addCounts(tags,body) {
 
   for (var i=0; i < tags.tagmap.length ; i ++ ) {
     for (var j=0;j<tags.tagmap[i].values.length;j++) {
-        var matches = body.match (new RegExp("\\b"+tags.tagmap[i].values[j]+"\\b", "ig"));
-        tags.tagmap[i].counts[j] = matches ? matches.length : 0;
+      var matches = body.replace(/\s/g,"\\s").match (new RegExp("\\b"+tags.tagmap[i].values[j]+"s?\\b", "igm")); 
+      tags.tagmap[i].counts[j] = matches ? matches.length : 0;
     }
   }
   return tags;
